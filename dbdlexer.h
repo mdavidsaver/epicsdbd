@@ -8,15 +8,13 @@
 
 struct DBDToken
 {
-    DBDToken() :line(1), col(0) {}
+    DBDToken() :line(0), col(0) {}
     DBDToken(const std::string& v, unsigned l=1, unsigned c=0)
         :value(v), line(l), col(c)
     {}
     std::string value;
     unsigned line, col;
 
-    inline void newline() {line++; col=1;}
-    inline void inc() {col++;}
     inline void push_back(std::string::value_type v)
     { value.push_back(v); }
     inline size_t size() const {return value.size();}
@@ -36,6 +34,7 @@ struct DBDToken
     void reset()
     {
         value.clear();
+        line = col = 0;
     }
 };
 
@@ -80,6 +79,11 @@ protected:
      * inspect @var tokState and @var tok
      */
     virtual void token()=0;
+
+private:
+    void doToken(tokState_t next);
+    void setLine();
+    unsigned line, col;
 };
 
 #endif // DBDLEXER_HPP

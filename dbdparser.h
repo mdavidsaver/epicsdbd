@@ -44,7 +44,6 @@ class DBDParser : public DBDLexer
 public:
     DBDParser();
 
-    Top tree;
     virtual void reset();
 
     enum parState_t {

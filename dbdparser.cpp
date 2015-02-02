@@ -12,7 +12,10 @@ DBDParser::DBDParser()
 
 void DBDParser::reset()
 {
-    tree.clear();
+    parState = parDBD;
+    depth = 0;
+    CoBtoken.reset();
+    blockargs.clear();
     DBDLexer::reset();
 }
 

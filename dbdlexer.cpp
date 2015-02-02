@@ -15,6 +15,8 @@ void DBDLexer::reset()
 {
     tokState = tokInit;
     tok.reset();
+    line = 1;
+    col = 0;
 }
 
 std::ostream& operator<<(std::ostream& strm, const DBDToken& t)
@@ -82,17 +84,35 @@ static bool iswordchar(char c)
     }
 }
 
+void DBDLexer::doToken(tokState_t next)
+{
+    token();
+    tok.reset();
+    tokState = next;
+}
+
+void DBDLexer::setLine()
+{
+    if(lexDebug)
+        std::cerr<<"Lex start token\n";
+    tok.line=line;
+    tok.col=col;
+}
+
+#define SETLINE() setLine()
+
 void DBDLexer::lex(std::istream &strm)
 {
     char c;
     while(strm.get(c)) {
-        if(c=='\n')
-            tok.newline();
-        else
-            tok.inc();
+        if(c=='\n') {
+            line++;
+            col=0;
+        } else
+            col++;
 
         if(lexDebug)
-            std::cerr<<"Lex "<<tok.line<<":"<<tok.col<<" in "<<DBDLexer::tokStateName(tokState)
+            std::cerr<<"Lex "<<line<<":"<<col<<" in "<<DBDLexer::tokStateName(tokState)
                     <<" '"<<c<<"' ("<<int(c)<<")\n";
 
         switch(tokState) {
@@ -109,18 +129,16 @@ void DBDLexer::lex(std::istream &strm)
                     | . -> error
              */
             switch(c) {
-            case '"': tokState = tokQuote; break;
-            case '%': tokState = tokCode; break;
-            case '#': tokState = tokComment; break;
+            case '"': SETLINE(); tokState = tokQuote; break;
+            case '%': SETLINE(); tokState = tokCode; break;
+            case '#': SETLINE(); tokState = tokComment; break;
             case '(':
             case ')':
             case '{':
             case '}':
-            case ',': tokState = tokLit;
+            case ',': SETLINE(); tokState = tokLit;
                 tok.push_back(c);
-                token();
-                tok.reset();
-                tokState = tokInit;
+                doToken(tokInit);
                 break;
             case ' ':
             case '\t':
@@ -128,7 +146,7 @@ void DBDLexer::lex(std::istream &strm)
             case '\n': tokState = tokInit; break;
             default:
                 if(iswordchar(c)){
-                    tokState = tokBare;
+                    SETLINE(); tokState = tokBare;
                     tok.push_back(c);
                 } else {
                     INVALID(c);
@@ -156,9 +174,7 @@ void DBDLexer::lex(std::istream &strm)
             case ',':
                 tokState = tokLit;
                 tok.push_back(c);
-                token();
-                tok.reset();
-                tokState = tokInit;
+                doToken(tokInit);
                 break;
             default:
                 INVALID(c);
@@ -180,9 +196,7 @@ void DBDLexer::lex(std::istream &strm)
             case '\r':
                 THROW("Missing closing quote");
             case '"':
-                token();
-                tok.reset();
-                tokState = tokWS;
+                doToken(tokWS);
                 break;
             default:
                 tok.push_back(c);
@@ -214,21 +228,15 @@ void DBDLexer::lex(std::istream &strm)
             case '\t':
             case '\r':
             case '\n':
-                token();
-                tok.reset();
-                tokState = tokWS; break;
+                doToken(tokWS); break;
             case '(':
             case ')':
             case '{':
             case '}':
             case ',':
-                token();
-                tok.reset();
-                tokState = tokLit;
+                doToken(tokLit);SETLINE();
                 tok.push_back(c);
-                token();
-                tok.reset();
-                tokState = tokInit;
+                doToken(tokInit);
                 break;
             default:
                 INVALID(c);
@@ -247,9 +255,7 @@ void DBDLexer::lex(std::istream &strm)
             switch(c) {
             case '\r':
             case '\n':
-                token();
-                tok.reset();
-                tokState = tokInit;
+                doToken(tokInit);
                 break;
             default:
                 tok.push_back(c);
