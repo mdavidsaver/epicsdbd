@@ -10,7 +10,7 @@ struct PrintingLexer : public DBDLexer
     PrintingLexer(std::ostream& s) : strm(s) {}
     void token()
     {
-        strm<<line<<":"<<col<<"\t"<<tok;
+        strm<<line<<":"<<col<<"\tToken: "<<tok<<"\n";
     }
 };
 }

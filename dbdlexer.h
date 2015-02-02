@@ -19,7 +19,7 @@ public:
 
     virtual void reset();
 
-    enum {
+    enum tokState_t {
         tokInit, tokLit, tokWS, tokQuote, tokEsc, tokBare, tokCode, tokComment
     } tokState;
 

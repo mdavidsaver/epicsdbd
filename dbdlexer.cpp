@@ -1,5 +1,7 @@
 #include <stdexcept>
+#include <iostream>
 #include <sstream>
+#include <assert.h>
 
 #include "dbdlexer.h"
 
@@ -16,6 +18,24 @@ void DBDLexer::reset()
     col = 0;
 }
 
+static const char* stateName(DBDLexer::tokState_t S)
+{
+    switch(S) {
+#define STATE(S) case DBDLexer::S: return #S
+    STATE(tokInit);
+    STATE(tokLit);
+    STATE(tokWS);
+    STATE(tokQuote);
+    STATE(tokEsc);
+    STATE(tokBare);
+    STATE(tokCode);
+    STATE(tokComment);
+#undef STATE
+    default:
+        return "<invalid>";
+    }
+}
+
 static
 std::string LexError(const DBDLexer& L, const char *msg)
 {
@@ -24,6 +44,17 @@ std::string LexError(const DBDLexer& L, const char *msg)
     return strm.str();
 }
 #define THROW(msg) throw std::runtime_error(LexError(*this, msg))
+
+static
+std::string InvalidChar(const DBDLexer& L, char c)
+{
+    std::ostringstream strm;
+    strm<<"Invalid charactor at "<<L.line<<":"<<L.col
+        <<" : '"<<c<<"' ("<<int(c)<<") State "
+        <<stateName(L.tokState);
+    return strm.str();
+}
+#define INVALID(c) throw std::runtime_error(InvalidChar(*this, c))
 
 static bool iswordchar(char c)
 {
@@ -55,16 +86,20 @@ void DBDLexer::lex(std::istream &strm)
         } else
             col++;
 
+//        std::cerr<<line<<":"<<col<<" in "<<stateName(tokState)
+//                 <<" '"<<c<<"' ("<<int(c)<<")\n";
+
         switch(tokState) {
         case tokInit:
+            assert(tok.empty());
             /*
             tokInit : '"' -> tokQuote
                     | [a-zA-Z0-9_\-+:.\[\]<>;] -> yymore -> tokBare
                     | '%' -> tokCode
                     | '#' -> tokComment
                     | [ \t\n\r] -> tokWS
-                    | [(){},] -> tok(literal) -> st_init
-                    | EOI -> st_done
+                    | [(){},] -> tok(literal) -> tokInit
+                    | EOI -> done
                     | . -> error
              */
             switch(c) {
@@ -90,15 +125,17 @@ void DBDLexer::lex(std::istream &strm)
                     tokState = tokBare;
                     tok.push_back(c);
                 } else {
-                    THROW("Invalid charactor");
+                    INVALID(c);
                 }
             }
             break;
 
         case tokWS:
+            assert(tok.empty());
             /*
-            st_ws : [ \t\n\r] -> st_init
-                  | EOI -> st_done
+            tokWS : [ \t\n\r] -> tokInit
+                  | [(){},] -> tok(literal) -> tokInit
+                  | EOI -> done
                   | . -> error
              */
             switch(c) {
@@ -106,8 +143,19 @@ void DBDLexer::lex(std::istream &strm)
             case '\t':
             case '\r':
             case '\n': tokState = tokWS; break;
+            case '(':
+            case ')':
+            case '{':
+            case '}':
+            case ',':
+                tokState = tokLit;
+                tok.push_back(c);
+                token();
+                tok.clear();
+                tokState = tokInit;
+                break;
             default:
-                THROW("Invalid charactor");
+                INVALID(c);
             }
 
             break;
@@ -117,7 +165,6 @@ void DBDLexer::lex(std::istream &strm)
             tokQuote : '\\' -> tokEsc
                      | [\n\r] -> error
                      | '"' -> tok(quote) -> tokWS
-                     | [(){},] -> tok(literal) -> tokInit
                      | . -> yymore -> tokQuote
                      | EOI -> error
              */
@@ -125,11 +172,12 @@ void DBDLexer::lex(std::istream &strm)
             case '\\': tokState = tokEsc; break;
             case '\n':
             case '\r':
-                THROW("Invalid charactor");
+                THROW("Missing closing quote");
             case '"':
                 token();
                 tok.clear();
                 tokState = tokWS;
+                break;
             default:
                 tok.push_back(c);
                 tokState = tokQuote;
@@ -163,8 +211,21 @@ void DBDLexer::lex(std::istream &strm)
                 token();
                 tok.clear();
                 tokState = tokWS; break;
+            case '(':
+            case ')':
+            case '{':
+            case '}':
+            case ',':
+                token();
+                tok.clear();
+                tokState = tokLit;
+                tok.push_back(c);
+                token();
+                tok.clear();
+                tokState = tokInit;
+                break;
             default:
-                THROW("Invalid charactor");
+                INVALID(c);
             }
 
             break;
