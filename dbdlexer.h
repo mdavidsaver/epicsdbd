@@ -25,12 +25,6 @@ struct DBDToken
         line = o.line;
         col = o.col;
     }
-    void swap(DBDToken& o)
-    {
-        value.swap(o.value);
-        std::swap(line, o.line);
-        std::swap(col, o.col);
-    }
     void reset()
     {
         value.clear();

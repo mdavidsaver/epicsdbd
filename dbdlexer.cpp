@@ -6,8 +6,11 @@
 #include "dbdlexer.h"
 
 DBDLexer::DBDLexer()
-    :lexDebug(false)
-{ reset(); }
+    :tokState(tokInit)
+    ,lexDebug(false)
+    ,line(1)
+    ,col(0)
+{}
 
 void DBDLexer::token() {}
 
@@ -21,7 +24,7 @@ void DBDLexer::reset()
 
 std::ostream& operator<<(std::ostream& strm, const DBDToken& t)
 {
-    strm<<t.line<<":"<<t.col<<"\t"<<t.value;
+    strm<<t.line<<":"<<t.col<<"\t'"<<t.value<<"'";
     return strm;
 }
 
@@ -206,9 +209,17 @@ void DBDLexer::lex(std::istream &strm)
 
         case tokEsc:
             /*
-            st_esc : . -> yymore -> st_quote
+            st_esc : 't' -> push '\t'
+                   | 'r' -> push '\r'
+                   | 'n' -> push '\n'
+                   | . -> yymore -> st_quote
                    | EOI -> error
              */
+            switch(c) {
+            case 't': c='\t'; break;
+            case 'r': c='\r'; break;
+            case 'n': c='\n'; break;
+            }
             tok.push_back(c);
             tokState = tokQuote;
             break;

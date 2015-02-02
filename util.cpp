@@ -9,6 +9,8 @@ void streamEscape(std::ostream& s, const char* c)
         char t=*c;
         if(t==0)
             break;
+        else if(t=='\t')
+            s.put(t);
         else if(t<' ' || t>=0x7f)
             s<<int(t);
         else switch(t)

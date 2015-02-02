@@ -4,41 +4,36 @@
 #include <vector>
 #include <list>
 
-#include <boost/shared_ptr.hpp>
-
 #include "dbdlexer.h"
 
-struct Node
-{
-    typedef boost::shared_ptr<Node> pointer;
-    unsigned line, col;
-    Node() :line(0),col(0) {}
-};
+/** @brief Parser for DB/DBD grammar
+ *
+ @code
+    value : tokBare | tokQuote
 
-struct Command : public Node
-{
-    std::string name, val;
-};
+    entry : command
+          | code
+          | comment
+          | block
 
-struct Code : public Node
-{
-    std::string val;
-};
+    command : value value
 
-struct Comment : public Node
-{
-    std::string val;
-};
+    code : tokCode
+    comment : tokComment
 
-struct Block : public Node
-{
-    std::string name;
-    std::vector<std::string> args;
-    std::list<Node::pointer> children;
-};
+    block : Bareword block_head
+          | Bareword block_head bock_body
 
-typedef std::list<Node::pointer> Top;
+    block_head : '(' ')'
+               | '(' value *(',' value) ')'
 
+    block_body : '{' dbd '}'
+
+    dbd :
+        | entry
+        | entry dbd
+ @endcode
+ */
 class DBDParser : public DBDLexer
 {
 public:
@@ -51,11 +46,12 @@ public:
     } parState;
     static const char* parStateName(parState_t S);
 
+    virtual void lex(std::istream&);
+
     bool parDebug;
 private:
     virtual void token();
 
-    //std::vector<boost::shared_ptr<Block> > stack;
 protected:
     unsigned depth;
 
@@ -74,6 +70,7 @@ protected:
     //! Mark start of block body
     virtual void parse_block_body_end()=0;
 
+    virtual void parse_start();
     virtual void parse_eoi();
 
     DBDToken CoBtoken;

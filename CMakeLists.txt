@@ -21,3 +21,11 @@ add_executable(cmdparser
   dbdparser.cpp
   util.cpp
 )
+
+add_executable(cmdast
+  cmdast.cpp
+  dbdlexer.cpp
+  dbdparser.cpp
+  dbdast.cpp
+  util.cpp
+)

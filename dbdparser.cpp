@@ -1,6 +1,8 @@
 
 #include <stdexcept>
 #include <sstream>
+#include <iostream>
+#include <cassert>
 
 #include "dbdparser.h"
 
@@ -19,12 +21,19 @@ void DBDParser::reset()
     DBDLexer::reset();
 }
 
+void DBDParser::lex(std::istream& s)
+{
+    parse_start();
+    DBDLexer::lex(s);
+}
+
 void DBDParser::parse_command(){}
 void DBDParser::parse_comment(){}
 void DBDParser::parse_code(){}
 void DBDParser::parse_block(){}
 void DBDParser::parse_block_body_start(){}
 void DBDParser::parse_block_body_end(){}
+void DBDParser::parse_start(){}
 void DBDParser::parse_eoi(){}
 
 const char* DBDParser::parStateName(parState_t S)
