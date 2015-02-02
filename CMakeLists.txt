@@ -10,7 +10,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   add_definitions(-Wall -Werror)
 endif()
 
-add_executable(parser
-  parser.cpp
+add_executable(cmdlexer
+  cmdlexer.cpp
   dbdlexer.cpp
 )
