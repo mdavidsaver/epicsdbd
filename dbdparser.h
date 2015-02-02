@@ -38,6 +38,7 @@ class DBDParser : public DBDLexer
 {
 public:
     DBDParser();
+    virtual ~DBDParser(){};
 
     virtual void reset();
 

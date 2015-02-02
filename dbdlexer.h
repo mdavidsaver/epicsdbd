@@ -48,6 +48,7 @@ class DBDLexer
 {
 public:
     DBDLexer();
+    virtual ~DBDLexer(){}
 
     /** @brief Tokenize an input stream
      *
