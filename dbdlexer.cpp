@@ -18,7 +18,7 @@ void DBDLexer::reset()
     col = 0;
 }
 
-static const char* stateName(DBDLexer::tokState_t S)
+const char* DBDLexer::tokStateName(tokState_t S)
 {
     switch(S) {
 #define STATE(S) case DBDLexer::S: return #S
@@ -30,6 +30,7 @@ static const char* stateName(DBDLexer::tokState_t S)
     STATE(tokBare);
     STATE(tokCode);
     STATE(tokComment);
+    STATE(tokEOI);
 #undef STATE
     default:
         return "<invalid>";
@@ -51,7 +52,7 @@ std::string InvalidChar(const DBDLexer& L, char c)
     std::ostringstream strm;
     strm<<"Invalid charactor at "<<L.line<<":"<<L.col
         <<" : '"<<c<<"' ("<<int(c)<<") State "
-        <<stateName(L.tokState);
+        <<DBDLexer::tokStateName(L.tokState);
     return strm.str();
 }
 #define INVALID(c) throw std::runtime_error(InvalidChar(*this, c))
@@ -86,7 +87,7 @@ void DBDLexer::lex(std::istream &strm)
         } else
             col++;
 
-//        std::cerr<<line<<":"<<col<<" in "<<stateName(tokState)
+//        std::cerr<<line<<":"<<col<<" in "<<DBDLexer::tokStateName(tokState)
 //                 <<" '"<<c<<"' ("<<int(c)<<")\n";
 
         switch(tokState) {
@@ -267,4 +268,6 @@ void DBDLexer::lex(std::istream &strm)
     default:
         THROW("Unexpected end of input");
     }
+    tokState = tokEOI;
+    token();
 }

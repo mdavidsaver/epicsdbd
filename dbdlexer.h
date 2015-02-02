@@ -20,8 +20,9 @@ public:
     virtual void reset();
 
     enum tokState_t {
-        tokInit, tokLit, tokWS, tokQuote, tokEsc, tokBare, tokCode, tokComment
+        tokInit, tokLit, tokWS, tokQuote, tokEsc, tokBare, tokCode, tokComment, tokEOI
     } tokState;
+    static const char* tokStateName(tokState_t S);
 
     std::string tok;
     unsigned line, col;
