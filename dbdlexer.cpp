@@ -6,6 +6,7 @@
 #include "dbdlexer.h"
 
 DBDLexer::DBDLexer()
+    :lexDebug(false)
 { reset(); }
 
 void DBDLexer::token() {}
@@ -90,8 +91,9 @@ void DBDLexer::lex(std::istream &strm)
         else
             tok.inc();
 
-//        std::cerr<<line<<":"<<col<<" in "<<DBDLexer::tokStateName(tokState)
-//                 <<" '"<<c<<"' ("<<int(c)<<")\n";
+        if(lexDebug)
+            std::cerr<<"Lex "<<tok.line<<":"<<tok.col<<" in "<<DBDLexer::tokStateName(tokState)
+                    <<" '"<<c<<"' ("<<int(c)<<")\n";
 
         switch(tokState) {
         case tokInit:
@@ -264,6 +266,7 @@ void DBDLexer::lex(std::istream &strm)
     switch(tokState) {
     case tokInit:
     case tokWS:
+        break;
     case tokCode:
     case tokComment:
         token();

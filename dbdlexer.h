@@ -19,6 +19,14 @@ struct DBDToken
     inline void inc() {col++;}
     inline void push_back(std::string::value_type v)
     { value.push_back(v); }
+    inline size_t size() const {return value.size();}
+    void take(DBDToken& o)
+    {
+        value.clear();
+        value.swap(o.value);
+        line = o.line;
+        col = o.col;
+    }
     void swap(DBDToken& o)
     {
         value.swap(o.value);
@@ -33,12 +41,27 @@ struct DBDToken
 
 std::ostream& operator<<(std::ostream&, const DBDToken&);
 
+/** @brief DB/DBD lexer
+ *
+ @code
+  tokBare   : [a-zA-Z0-9_\-+:.\[\]<>;]
+  tokQuote  : '"' *([^"\n\\]|(\\.)) '"'
+  tokCode   : '%' [^\n\r]*
+  tokComment: '#' [^\n\r]*
+  tokLit    : [{}(),]
+ @endcode
+ */
 class DBDLexer
 {
 public:
     DBDLexer();
 
-    void lex(std::istream&);
+    /** @brief Tokenize an input stream
+     *
+     @throws std::runtime_error for invalid charator or unexpected EoI
+     @throws std::logic_error for internal state errors
+     */
+    virtual void lex(std::istream&);
 
     virtual void reset();
 
@@ -47,8 +70,15 @@ public:
     } tokState;
     static const char* tokStateName(tokState_t S);
 
+    bool lexDebug;
+
     DBDToken tok;
 protected:
+    /** @brief Lexer callback
+     *
+     * Called for each token.
+     * inspect @var tokState and @var tok
+     */
     virtual void token()=0;
 };
 

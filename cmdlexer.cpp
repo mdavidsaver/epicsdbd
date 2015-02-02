@@ -30,6 +30,7 @@ int main(int argc, char *argv[]) {
     }
 
     PrintingLexer P(*ostrm);
+    //P.lexDebug = true;
     try{
         P.lex(*istrm);
         std::cerr<<"Success\n";

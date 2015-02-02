@@ -14,3 +14,10 @@ add_executable(cmdlexer
   cmdlexer.cpp
   dbdlexer.cpp
 )
+
+add_executable(cmdparser
+  cmdparser.cpp
+  dbdlexer.cpp
+  dbdparser.cpp
+  util.cpp
+)

@@ -2,6 +2,7 @@
 #define DBDPARSER_H
 
 #include <vector>
+#include <list>
 
 #include <boost/shared_ptr.hpp>
 
@@ -49,12 +50,35 @@ public:
     enum parState_t {
         parDBD, parCoB, parCom, parCode, parArg, parArgCont, parTail
     } parState;
+    static const char* parStateName(parState_t S);
 
-protected:
+    bool parDebug;
+private:
     virtual void token();
 
-    std::vector<boost::shared_ptr<Block> > stack;
+    //std::vector<boost::shared_ptr<Block> > stack;
+protected:
+    unsigned depth;
 
+    //! Command name from CoBtoken and arg from tok
+    virtual void parse_command()=0;
+
+    //! comment from tok
+    virtual void parse_comment()=0;
+    //! code from tok
+    virtual void parse_code()=0;
+
+    //! Command name from CoBtoken and args from blockargs
+    virtual void parse_block()=0;
+    //! Mark start of block body
+    virtual void parse_block_body_start()=0;
+    //! Mark start of block body
+    virtual void parse_block_body_end()=0;
+
+    virtual void parse_eoi();
+
+    DBDToken CoBtoken;
+    std::vector<std::string> blockargs;
 };
 
 #endif // DBDPARSER_H
