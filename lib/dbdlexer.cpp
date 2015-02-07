@@ -103,8 +103,6 @@ void DBDLexer::setLine()
     tok.col=col;
 }
 
-#define SETLINE() setLine()
-
 void DBDLexer::lex(std::istream &strm)
 {
     char c;
@@ -134,14 +132,14 @@ new_state:
                     | . -> error
              */
             switch(c) {
-            case '"': SETLINE(); tokState = tokQuote; break;
-            case '%': SETLINE(); tokState = tokCode; break;
-            case '#': SETLINE(); tokState = tokComment; break;
+            case '"': setLine(); tokState = tokQuote; break;
+            case '%': setLine(); tokState = tokCode; break;
+            case '#': setLine(); tokState = tokComment; break;
             case '(':
             case ')':
             case '{':
             case '}':
-            case ',': SETLINE(); tokState = tokLit;
+            case ',': setLine(); tokState = tokLit;
                 tok.push_back(c);
                 doToken(tokInit);
                 break;
@@ -151,7 +149,7 @@ new_state:
             case '\n': tokState = tokInit; break;
             default:
                 if(iswordchar(c)){
-                    SETLINE(); tokState = tokBare;
+                    setLine(); tokState = tokBare;
                     tok.push_back(c);
                 } else {
                     INVALID(c);
@@ -248,6 +246,7 @@ new_state:
     default:
         THROW("Unexpected end of input");
     }
+    setLine();
     tokState = tokEOI;
     doToken(tokEOI);
 }

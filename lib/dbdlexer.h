@@ -30,6 +30,13 @@ struct DBDToken
         value.clear();
         line = col = 0;
     }
+
+    bool operator==(const DBDToken& o) {
+        return line==o.line && col==o.col && value==o.value;
+    }
+    bool operator!=(const DBDToken& o) {
+        return !((*this)==o);
+    }
 };
 
 std::ostream& operator<<(std::ostream&, const DBDToken&);
