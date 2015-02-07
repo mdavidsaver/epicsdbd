@@ -12,32 +12,32 @@ struct PrintingParser : public DBDParser
 
     void pad()
     {
-        for(unsigned i=0; i<depth; i++)
+        for(unsigned i=0; i<depth(); i++)
             strm<<"  ";
     }
 
-    virtual void parse_command()
+    virtual void parse_command(DBDToken& cmd, DBDToken& arg)
     {
         pad();
-        strm<<CoBtoken.value<<" \"";
-        streamEscape(strm, tok.value)<<"\"\n";
+        strm<<cmd.value<<" \"";
+        streamEscape(strm, arg.value)<<"\"\n";
     }
 
-    virtual void parse_comment()
+    virtual void parse_comment(DBDToken& tok)
     { pad(); strm<<"#"<<tok.value<<"\n";}
 
-    virtual void parse_code()
+    virtual void parse_code(DBDToken& tok)
     { pad(); strm<<"%"<<tok.value<<"\n";}
 
-    virtual void parse_block()
+    virtual void parse_block(DBDToken& name, blockarg_t& args)
     {
         pad();
-        strm<<CoBtoken.value<<"(";
-        for(size_t i=0, e=blockargs.size(); i<e; i++)
+        strm<<name.value<<"(";
+        for(size_t i=0, e=args.size(); i<e; i++)
         {
             if(i>0)
                 strm<<", ";
-            streamEscape(strm, blockargs[i]);
+            streamEscape(strm, args[i]);
         }
         strm<<")\n";
     }

@@ -10,9 +10,9 @@ struct PrintingLexer : public DBDLexer
 {
     std::ostream& strm;
     PrintingLexer(std::ostream& s) : strm(s) {}
-    void token()
+    virtual void token(tokState_t state, DBDToken& token)
     {
-        strm<<DBDLexer::tokStateName(tokState)<<"\t"<<tok<<"\n";
+        strm<<DBDLexer::tokStateName(state)<<"\t"<<token<<"\n";
     }
 };
 }

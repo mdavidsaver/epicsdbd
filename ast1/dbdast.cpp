@@ -13,50 +13,50 @@ void DBDASTParser::reset()
 }
 
 
-void DBDASTParser::parse_command()
+void DBDASTParser::parse_command(DBDToken& cmd, DBDToken& arg)
 {
-    assert(stack.size()==depth+1);
+    assert(stack.size()==depth()+1);
     boost::shared_ptr<Command> P(new Command());
-    P->line = CoBtoken.line;
-    P->col = CoBtoken.col;
-    P->name.swap(CoBtoken.value);
+    P->line = cmd.line;
+    P->col = cmd.col;
+    P->name.swap(cmd.value);
     stack.back()->children.push_back(P);
 }
 
-void DBDASTParser::parse_comment()
+void DBDASTParser::parse_comment(DBDToken& C)
 {
-    assert(stack.size()==depth+1);
+    assert(stack.size()==depth()+1);
     boost::shared_ptr<Comment> P(new Comment());
-    P->line = tok.line;
-    P->col = tok.col;
-    P->value.swap(tok.value);
+    P->line = C.line;
+    P->col = C.col;
+    P->value.swap(C.value);
     stack.back()->children.push_back(P);
 }
 
-void DBDASTParser::parse_code()
+void DBDASTParser::parse_code(DBDToken& C)
 {
-    assert(stack.size()==depth+1);
+    assert(stack.size()==depth()+1);
     boost::shared_ptr<Code> P(new Code());
-    P->line = tok.line;
-    P->col = tok.col;
-    P->value.swap(tok.value);
+    P->line = C.line;
+    P->col = C.col;
+    P->value.swap(C.value);
     stack.back()->children.push_back(P);
 }
 
-void DBDASTParser::parse_block()
+void DBDASTParser::parse_block(DBDToken& name, blockarg_t& args)
 {
-    assert(stack.size()==depth+1);
+    assert(stack.size()==depth()+1);
     boost::shared_ptr<Block> P(new Block());
-    P->line = CoBtoken.line;
-    P->col = CoBtoken.col;
-    P->name.swap(CoBtoken.value);
-    P->args.swap(blockargs);
+    P->line = name.line;
+    P->col = name.col;
+    P->name.swap(name.value);
+    P->args.swap(args);
     stack.back()->children.push_back(P);
 }
 
 void DBDASTParser::parse_block_body_start()
 {
-    assert(stack.size()==depth+1);
+    assert(stack.size()==depth()+1);
     assert(stack.back()->children.size()>0);
     boost::shared_ptr<Block> P(boost::shared_static_cast<Block>(stack.back()->children.back()));
     stack.push_back(P);
@@ -65,7 +65,7 @@ void DBDASTParser::parse_block_body_start()
 void DBDASTParser::parse_block_body_end()
 {
     stack.pop_back();
-    assert(stack.size()==depth+1);
+    assert(stack.size()==depth()+1);
 }
 
 void DBDASTParser::parse_start()

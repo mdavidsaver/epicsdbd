@@ -61,7 +61,7 @@ public:
 
     enum tokState_t {
         tokInit, tokLit, tokWS, tokQuote, tokEsc, tokBare, tokCode, tokComment, tokEOI
-    } tokState;
+    };
     static const char* tokStateName(tokState_t S);
 
     bool lexDebug;
@@ -73,11 +73,12 @@ protected:
      * Called for each token.
      * inspect @var tokState and @var tok
      */
-    virtual void token()=0;
+    virtual void token(tokState_t, DBDToken&)=0;
 
 private:
     void doToken(tokState_t next);
     void setLine();
+    tokState_t tokState;
     unsigned line, col;
 };
 

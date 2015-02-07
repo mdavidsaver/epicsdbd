@@ -44,28 +44,29 @@ public:
 
     enum parState_t {
         parDBD, parCoB, parCom, parCode, parArg, parArgCont, parTail
-    } parState;
+    };
     static const char* parStateName(parState_t S);
 
     virtual void lex(std::istream&);
 
-    bool parDebug;
-private:
-    virtual void token();
+    inline unsigned depth() const {return parDepth;}
 
+    bool parDebug;
+
+    typedef std::vector<std::string> blockarg_t;
 protected:
-    unsigned depth;
 
     //! Command name from CoBtoken and arg from tok
-    virtual void parse_command()=0;
+    virtual void parse_command(DBDToken& cmd, DBDToken& arg)=0;
 
     //! comment from tok
-    virtual void parse_comment()=0;
+    virtual void parse_comment(DBDToken&)=0;
     //! code from tok
-    virtual void parse_code()=0;
+    virtual void parse_code(DBDToken&)=0;
 
     //! Command name from CoBtoken and args from blockargs
-    virtual void parse_block()=0;
+    virtual void parse_block(DBDToken& name, blockarg_t&)=0;
+
     //! Mark start of block body
     virtual void parse_block_body_start()=0;
     //! Mark start of block body
@@ -74,8 +75,15 @@ protected:
     virtual void parse_start();
     virtual void parse_eoi();
 
+private:
+    virtual void token(tokState_t, DBDToken&);
+
+    parState_t parState;
+
+    unsigned parDepth;
+
     DBDToken CoBtoken;
-    std::vector<std::string> blockargs;
+    blockarg_t blockargs;
 };
 
 #endif // DBDPARSER_H

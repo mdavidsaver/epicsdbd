@@ -59,10 +59,10 @@ public:
     Top tree;
 
 private:
-    virtual void parse_command();
-    virtual void parse_comment();
-    virtual void parse_code();
-    virtual void parse_block();
+    virtual void parse_command(DBDToken& cmd, DBDToken& arg);
+    virtual void parse_comment(DBDToken&);
+    virtual void parse_code(DBDToken&);
+    virtual void parse_block(DBDToken&, blockarg_t&);
     virtual void parse_block_body_start();
     virtual void parse_block_body_end();
     virtual void parse_start();

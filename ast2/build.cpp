@@ -29,12 +29,12 @@ public:
 
     //virtual void reset();
 
-    virtual void parse_command()
+    virtual void parse_command(DBDToken& cmd, DBDToken& arg)
     {
-        assert(stack.size()==depth+1);
+        assert(stack.size()==depth()+1);
 
-        size_t clen = CoBtoken.value.size(),
-               alen =tok.value.size();
+        size_t clen = cmd.value.size(),
+               alen =arg.value.size();
         if(clen>0xffffff||alen>0xffffff)
             throw std::bad_alloc();
         DBDStatement *stmt=(DBDStatement*)calloc(1, sizeof(*stmt)+alen+clen);
@@ -45,17 +45,17 @@ public:
 
         stmt->cmd = stmt->_alloc;
         stmt->arg = stmt->cmd+clen+1;
-        stmt->common.line = CoBtoken.line;
-        stmt->common.col = CoBtoken.col;
-        memcpy(stmt->cmd, CoBtoken.value.c_str(), clen);
+        stmt->common.line = cmd.line;
+        stmt->common.col = cmd.col;
+        memcpy(stmt->cmd, cmd.value.c_str(), clen);
         memcpy(stmt->arg, tok.value.c_str(), alen);
 
         ellAdd(&stack.back()->children, &stmt->common.node);
     }
 
-    void nest(char type)
+    void nest(char type, DBDToken& C)
     {
-        assert(stack.size()==depth+1);
+        assert(stack.size()==depth()+1);
         size_t len = tok.value.size();
         if(len>0xffffff)
             throw std::bad_alloc();
@@ -65,26 +65,26 @@ public:
             throw std::bad_alloc();
 
         stmt->common.type = DBDNodeNest;
-        stmt->common.line = CoBtoken.line;
-        stmt->common.col = CoBtoken.col;
+        stmt->common.line = C.line;
+        stmt->common.col = C.col;
         stmt->line[0] = type;
-        memcpy(stmt->line+1, tok.value.c_str(), len);
+        memcpy(stmt->line+1, C.value.c_str(), len);
 
         ellAdd(&stack.back()->children, &stmt->common.node);
     }
 
-    virtual void parse_comment(){nest('#');}
-    virtual void parse_code(){nest('%');}
+    virtual void parse_comment(DBDToken& C){nest('#',C);}
+    virtual void parse_code(DBDToken& C){nest('%',C);}
 
-    virtual void parse_block()
+    virtual void parse_block(DBDToken& name, blockarg_t& args)
     {
-        assert(stack.size()==depth+1);
-        size_t nlen = CoBtoken.value.size(), alen=nlen,
-               bcnt = blockargs.size();
+        assert(stack.size()==depth()+1);
+        size_t nlen = name.value.size(), alen=nlen,
+               bcnt = args.size();
         if(nlen>0xff || bcnt>DBDBlockMaxArgs)
             throw std::bad_alloc();
         for(unsigned i=0; i<bcnt; i++) {
-            size_t esize = blockargs[i].size()+1;
+            size_t esize = args[i].size()+1;
             if(size_t(-1)-alen<esize)
                 throw std::bad_alloc();
             alen += esize;
@@ -98,18 +98,18 @@ public:
 #endif
 
         stmt->common.type = DBDNodeBlock;
-        stmt->common.line = CoBtoken.line;
-        stmt->common.col = CoBtoken.col;
+        stmt->common.line = name.line;
+        stmt->common.col = name.col;
         stmt->name = stmt->_alloc;
         stmt->nargs = bcnt;
-        memcpy(stmt->name, CoBtoken.value.c_str(), nlen);
+        memcpy(stmt->name, name.value.c_str(), nlen);
 
         char *buf = stmt->_alloc+nlen+1;
         for(size_t i = 0;  i<bcnt; i++) {
             assert(buf<buflim);
-            size_t esize = blockargs[i].size();
+            size_t esize = args[i].size();
             stmt->args[i] = buf;
-            memcpy(buf, blockargs[i].c_str(), esize);
+            memcpy(buf, args[i].c_str(), esize);
             buf += esize+1;
         }
 
@@ -118,7 +118,7 @@ public:
 
     virtual void parse_block_body_start()
     {
-        assert(stack.size()==depth+1);
+        assert(stack.size()==depth()+1);
         DBDBlock *stmt=stack.back();
         assert(ellCount(&stmt->children)>0);
         DBDNode *back=(DBDNode*)ellLast(&stmt->children);
@@ -130,6 +130,7 @@ public:
     virtual void parse_block_body_end()
     {
         stack.pop_back();
+        assert(stack.size()==depth()+1);
     }
 
     virtual void parse_start()

@@ -6,13 +6,13 @@
 #include "dbdlexer.h"
 
 DBDLexer::DBDLexer()
-    :tokState(tokInit)
-    ,lexDebug(false)
+    :lexDebug(false)
+    ,tokState(tokInit)
     ,line(1)
     ,col(0)
 {}
 
-void DBDLexer::token() {}
+void DBDLexer::token(tokState_t, DBDToken &) {}
 
 void DBDLexer::reset()
 {
@@ -57,15 +57,15 @@ std::string LexError(const DBDLexer& L, const char *msg)
 #define THROW(msg) throw std::runtime_error(LexError(*this, msg))
 
 static
-std::string InvalidChar(const DBDLexer& L, char c)
+std::string InvalidChar(const DBDLexer& L, DBDLexer::tokState_t state, char c)
 {
     std::ostringstream strm;
     strm<<"Invalid charactor at "<<L.tok.line<<":"<<L.tok.col
         <<" : '"<<c<<"' ("<<int(c)<<") State "
-        <<DBDLexer::tokStateName(L.tokState);
+        <<DBDLexer::tokStateName(state);
     return strm.str();
 }
-#define INVALID(c) throw std::runtime_error(InvalidChar(*this, c))
+#define INVALID(c) throw std::runtime_error(InvalidChar(*this, this->tokState, c))
 
 static bool iswordchar(char c)
 {
@@ -89,7 +89,7 @@ static bool iswordchar(char c)
 
 void DBDLexer::doToken(tokState_t next)
 {
-    token();
+    token(tokState, tok);
     tok.reset();
     tokState = next;
 }
@@ -286,11 +286,11 @@ void DBDLexer::lex(std::istream &strm)
         break;
     case tokCode:
     case tokComment:
-        token();
+        doToken(tokEOI);
         break;
     default:
         THROW("Unexpected end of input");
     }
     tokState = tokEOI;
-    token();
+    doToken(tokEOI);
 }

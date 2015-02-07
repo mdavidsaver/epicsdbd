@@ -7,15 +7,15 @@
 #include "dbdparser.h"
 
 DBDParser::DBDParser()
-    :parState(parDBD)
-    ,parDebug(false)
-    ,depth(0)
+    :parDebug(false)
+    ,parState(parDBD)
+    ,parDepth(0)
 {}
 
 void DBDParser::reset()
 {
     parState = parDBD;
-    depth = 0;
+    parDepth = 0;
     CoBtoken.reset();
     blockargs.clear();
     DBDLexer::reset();
@@ -27,10 +27,10 @@ void DBDParser::lex(std::istream& s)
     DBDLexer::lex(s);
 }
 
-void DBDParser::parse_command(){}
-void DBDParser::parse_comment(){}
-void DBDParser::parse_code(){}
-void DBDParser::parse_block(){}
+void DBDParser::parse_command(DBDToken&, DBDToken&){}
+void DBDParser::parse_comment(DBDToken&){}
+void DBDParser::parse_code(DBDToken&){}
+void DBDParser::parse_block(DBDToken&, blockarg_t&){}
 void DBDParser::parse_block_body_start(){}
 void DBDParser::parse_block_body_end(){}
 void DBDParser::parse_start(){}
@@ -53,17 +53,17 @@ const char* DBDParser::parStateName(parState_t S)
     }
 }
 
-static void invalidToken(const DBDParser& t)
+static void invalidToken(const DBDToken& t, DBDParser::tokState_t state)
 {
     std::ostringstream strm;
-    strm<<"Invalid token: "<<DBDParser::tokStateName(t.tokState)<<" "<<t.tok;
+    strm<<"Invalid token: "<<DBDParser::tokStateName(state)<<" "<<t;
     throw std::runtime_error(strm.str());
 }
 
-void DBDParser::token()
+void DBDParser::token(tokState_t tokState, DBDToken &tok)
 {
     if(parDebug)
-        std::cerr<<"Parse "<<depth
+        std::cerr<<"Parse "<<parDepth
                  <<" State: "<<parStateName(parState)
                  <<" Tok: "<<tokStateName(tokState)<<" "
                  <<tok<<"\n";
@@ -90,7 +90,7 @@ void DBDParser::token()
          */
         switch(tokState) {
         case tokEOI:
-            if(depth==0) {
+            if(parDepth==0) {
                 parse_eoi();
                 return;
             } else
@@ -109,27 +109,27 @@ void DBDParser::token()
             {
             case '#':
                 // reduce comment
-                parse_comment();
+                parse_comment(tok);
                 parState = parDBD; break;
             case '%':
                 // reduce code
-                parse_code();
+                parse_code(tok);
                 parState = parDBD;break;
             case '}':
                 // reduce block
-                if(depth==0)
+                if(parDepth==0)
                     throw std::runtime_error("'}' without '{'");
-                depth--;
+                parDepth--;
                 parse_block_body_end();
                 parState = parDBD;
                 break;
             case '{':
                 if(parState==parTail) {
                     // reduce initbody
-                    if(depth==0xffff)
+                    if(parDepth==0xffff)
                         throw std::runtime_error("Block depth limit exceed");
                     parse_block_body_start();
-                    depth++;
+                    parDepth++;
                     parState = parDBD;
                     break;
                 }
@@ -139,7 +139,7 @@ void DBDParser::token()
             break;
 
         default:
-            invalidToken(*this);
+            invalidToken(tok, tokState);
         }
         break;
 
@@ -155,7 +155,7 @@ void DBDParser::token()
         case tokBare:
         case tokQuote:
             // reduce command
-            parse_command();
+            parse_command(CoBtoken, tok);
             CoBtoken.reset();
             parState = parDBD;
             break;
@@ -171,7 +171,7 @@ void DBDParser::token()
             break;
 
         default:
-            invalidToken(*this);
+            invalidToken(tok, tokState);
         }
         break;
 
@@ -194,14 +194,14 @@ void DBDParser::token()
             assert(tok.size()==1);
             if(tok.value.at(0)==')') {
                 // reduce blockargs
-                parse_block();
+                parse_block(CoBtoken, blockargs);
                 parState = parTail;
             } else
                 throw std::runtime_error("Unexpected literal");
             break;
 
         default:
-            invalidToken(*this);
+            invalidToken(tok, tokState);
 
         }
         break;
@@ -213,7 +213,7 @@ void DBDParser::token()
                        | . -> error
          */
         if(tokState!=tokLit)
-            invalidToken(*this);
+            invalidToken(tok, tokState);
 
         assert(tok.size()==1);
         switch(tok.value.at(0))
@@ -221,7 +221,7 @@ void DBDParser::token()
         case ',': parState = parArg; break;
         case ')':
             // reduce blockargs
-            parse_block();
+            parse_block(CoBtoken, blockargs);
             parState = parTail;
             break;
         default:
