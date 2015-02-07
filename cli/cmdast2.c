@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "dbdast.h"
+#include "dbdast2.h"
 
 int main(int argc, char *argv[])
 {
