@@ -26,6 +26,7 @@ include_directories(
 add_executable(cmdlexer
   cmdlexer.cpp
   dbdlexer.cpp
+  cfstream.cpp
 )
 
 add_executable(cmdparser

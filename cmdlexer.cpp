@@ -1,7 +1,9 @@
-#include <fstream>
+#include <cstdio>
+
 #include <iostream>
 
 #include "dbdlexer.h"
+#include "cfstream.h"
 
 namespace {
 struct PrintingLexer : public DBDLexer
@@ -16,23 +18,35 @@ struct PrintingLexer : public DBDLexer
 }
 
 int main(int argc, char *argv[]) {
-    std::istream *istrm = &std::cin;
-    std::ostream *ostrm = &std::cout;
-    std::ifstream infile;
-    std::ofstream outfile;
-    if(argc>1) {
-        infile.open(argv[1]);
-        istrm = &infile;
+    cfile_streambuf ifs, ofs;
+    if(argc>1 && argv[1][0]!='-') {
+        FILE *fp=fopen(argv[1], "r");
+        if(!fp) {
+            perror("Failed to open input file");
+            return 1;
+        }
+        ifs.set(fp);
+    } else {
+        ifs.set(stdin);
     }
-    if(argc>2) {
-        outfile.open(argv[2]);
-        ostrm = &outfile;
+    if(argc>2 && argv[2][0]!='-') {
+        FILE *fp=fopen(argv[2], "w");
+        if(!fp) {
+            perror("Failed to open output file");
+            return 1;
+        }
+        ofs.set(fp);
+    } else {
+        ofs.set(stdout);
     }
 
-    PrintingLexer P(*ostrm);
+    std::istream istrm(&ifs);
+    std::ostream ostrm(&ofs);
+
+    PrintingLexer P(ostrm);
     //P.lexDebug = true;
     try{
-        P.lex(*istrm);
+        P.lex(istrm);
         std::cerr<<"Success\n";
         return 0;
     }catch(std::exception& e) {
