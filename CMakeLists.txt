@@ -18,6 +18,14 @@ endif()
 
 find_package(EPICS REQUIRED)
 
+#find_package(PythonInterp 2.7)
+find_package(PythonLibs 2.7.3 EXACT)
+
+find_package(SWIG 2.0)
+if(SWIG_FOUND)
+  include(${SWIG_USE_FILE})
+endif()
+
 include_directories(
   ${EPICS_INCLUDE_DIRS}
   ${CMAKE_CURRENT_SOURCE_DIR}
@@ -55,3 +63,7 @@ add_executable(cmdast2
 )
 
 target_link_libraries(cmdast2 ${EPICS_Com_LIBRARY})
+
+if(SWIG_FOUND AND PYTHONLIBS_FOUND)
+  add_subdirectory(python)
+endif()

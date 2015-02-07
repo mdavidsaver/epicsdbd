@@ -1,2 +1,5 @@
 *.user
 *~
+build
+*.so
+*_wrap.cpp
