@@ -3,4 +3,9 @@
 *-swp
 build
 *.so
+*_wrap.h
 *_wrap.cpp
+*.pyc
+*.pyo
+
+dbdlexparse.py
