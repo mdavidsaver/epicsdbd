@@ -60,7 +60,7 @@ public:
     virtual void reset();
 
     enum tokState_t {
-        tokInit, tokLit, tokWS, tokQuote, tokEsc, tokBare, tokCode, tokComment, tokEOI
+        tokInit, tokLit, tokQuote, tokEsc, tokBare, tokCode, tokComment, tokEOI
     };
     static const char* tokStateName(tokState_t S);
 

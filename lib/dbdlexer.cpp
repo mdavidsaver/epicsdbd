@@ -34,7 +34,6 @@ const char* DBDLexer::tokStateName(tokState_t S)
 #define STATE(S) case DBDLexer::S: return #S
     STATE(tokInit);
     STATE(tokLit);
-    STATE(tokWS);
     STATE(tokQuote);
     STATE(tokEsc);
     STATE(tokBare);
@@ -89,6 +88,8 @@ static bool iswordchar(char c)
 
 void DBDLexer::doToken(tokState_t next)
 {
+    if(lexDebug)
+        std::cerr<<"Lex finish token\n";
     token(tokState, tok);
     tok.reset();
     tokState = next;
@@ -118,6 +119,7 @@ void DBDLexer::lex(std::istream &strm)
             std::cerr<<"Lex "<<line<<":"<<col<<" in "<<DBDLexer::tokStateName(tokState)
                     <<" '"<<c<<"' ("<<int(c)<<")\n";
 
+new_state:
         switch(tokState) {
         case tokInit:
             assert(tok.value.empty());
@@ -126,7 +128,7 @@ void DBDLexer::lex(std::istream &strm)
                     | [a-zA-Z0-9_\-+:.\[\]<>;] -> yymore -> tokBare
                     | '%' -> tokCode
                     | '#' -> tokComment
-                    | [ \t\n\r] -> tokWS
+                    | [ \t\n\r] -> tokInit
                     | [(){},] -> tok(literal) -> tokInit
                     | EOI -> done
                     | . -> error
@@ -157,39 +159,11 @@ void DBDLexer::lex(std::istream &strm)
             }
             break;
 
-        case tokWS:
-            assert(tok.value.empty());
-            /*
-            tokWS : [ \t\n\r] -> tokInit
-                  | [(){},] -> tok(literal) -> tokInit
-                  | EOI -> done
-                  | . -> error
-             */
-            switch(c) {
-            case ' ':
-            case '\t':
-            case '\r':
-            case '\n': tokState = tokWS; break;
-            case '(':
-            case ')':
-            case '{':
-            case '}':
-            case ',':
-                tokState = tokLit;
-                tok.push_back(c);
-                doToken(tokInit);
-                break;
-            default:
-                INVALID(c);
-            }
-
-            break;
-
         case tokQuote:
             /*
             tokQuote : '\\' -> tokEsc
                      | [\n\r] -> error
-                     | '"' -> tok(quote) -> tokWS
+                     | '"' -> tok(quote) -> tokInit
                      | . -> yymore -> tokQuote
                      | EOI -> error
              */
@@ -199,7 +173,7 @@ void DBDLexer::lex(std::istream &strm)
             case '\r':
                 THROW("Missing closing quote");
             case '"':
-                doToken(tokWS);
+                doToken(tokInit);
                 break;
             default:
                 tok.push_back(c);
@@ -227,30 +201,13 @@ void DBDLexer::lex(std::istream &strm)
         case tokBare:
             /*
             tokBare : [a-zA-Z0-9_\-+:.\[\]<>;] -> yymore -> tokBare
-                    | [ \t\n\r] -> tok(bareword) -> tokWS
-                    | [(){},] -> tok(literal) -> tokInit
-                    | EOI -> done
-                    | . -> error
+                    | . tok(bareword) -> jump tokInit
              */
-            if(iswordchar(c))
+            if(iswordchar(c)) {
                 tok.push_back(c);
-            else switch(c) {
-            case ' ':
-            case '\t':
-            case '\r':
-            case '\n':
-                doToken(tokWS); break;
-            case '(':
-            case ')':
-            case '{':
-            case '}':
-            case ',':
-                doToken(tokLit);SETLINE();
-                tok.push_back(c);
+            } else {
                 doToken(tokInit);
-                break;
-            default:
-                INVALID(c);
+                goto new_state; // process this char in the initial state
             }
 
             break;
@@ -282,10 +239,10 @@ void DBDLexer::lex(std::istream &strm)
     // EOI
     switch(tokState) {
     case tokInit:
-    case tokWS:
         break;
     case tokCode:
     case tokComment:
+    case tokBare:
         doToken(tokEOI);
         break;
     default:
