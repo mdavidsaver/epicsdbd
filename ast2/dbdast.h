@@ -68,6 +68,7 @@ struct DBDValue {
 };
 
 DBDFile *DBDParseFile(const char* fname);
+DBDFile *DBDParseFileP(FILE *, const char* fname);
 DBDFile *DBDParseMemory(const char *buf, const char *fname);
 
 /* free pointer to DBDFile, DBDNest, DBDBlock, DBDStatement, or DBDValue */

@@ -45,11 +45,12 @@ add_executable(cmdast1
 )
 
 add_executable(cmdast2
-  ast2/dbexpand.cpp
+  ast2/dbexpand.c
   dbdlexer.cpp
   dbdparser.cpp
   ast2/astlib.c
   ast2/build.cpp
+  cfstream.cpp
   util.cpp
 )
 

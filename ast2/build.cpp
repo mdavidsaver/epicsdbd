@@ -7,8 +7,8 @@
 #include <errlog.h>
 
 #include "dbdast.h"
-
 #include "dbdparser.h"
+#include "cfstream.h"
 
 namespace {
 class DBDASTParser : public DBDParser
@@ -153,17 +153,20 @@ public:
 
 }//namespace
 
-DBDFile *DBDParseFile(const char* fname)
+DBDFile *DBDParseFileP(FILE *fp, const char* fname)
 {
     DBDFile *file = (DBDFile*)calloc(1, sizeof(*file)+strlen(fname));
-    if(!file)
+    if(!file) {
+        fclose(fp);
         return NULL;
+    }
     strcpy(file->name, fname);
 
     try{
-        std::ifstream fs(fname);
+        cfile_streambuf isb(fp);
+        std::istream istrm(&isb);
         DBDASTParser P;
-        P.lex(fs);
+        P.lex(istrm);
         errlogPrintf("Total alloc %lu", (unsigned long)P.totalalloc);
         ellConcat(&file->entries, &P.fakeroot->children);
     } catch(std::exception& e) {
@@ -173,6 +176,16 @@ DBDFile *DBDParseFile(const char* fname)
     }
 
     return file;
+}
+
+DBDFile *DBDParseFile(const char* fname)
+{
+    DBDFile *ret;
+    FILE *fp=fopen(fname, "r");
+    ret = DBDParseFileP(fp, fname);
+    if(!ret)
+        fclose(fp);
+    return ret;
 }
 
 DBDFile *DBDParseMemory(const char *buf, const char *fname)
