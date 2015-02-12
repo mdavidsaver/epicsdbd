@@ -5,10 +5,10 @@ from distutils.core import setup, Extension
 from os import getcwd
 from os.path import join
 
-setup(name="dbdlexparse",
+setup(name="epicsdbd",
       ext_modules=[
-        Extension("_dbdlexparse",
-                  sources=['dbdlexparse.i',
+        Extension("_epicsdbd",
+                  sources=['epicsdbd.i',
                            '../lib/dbdlexer.cpp',
                            '../lib/dbdparser.cpp',
                            'pystream.cpp'],
@@ -16,5 +16,5 @@ setup(name="dbdlexparse",
                   swig_opts=['-c++','-I../lib'],
         ),
       ],
-      py_modules = ['dbdlexparse'],
+      py_modules = ['epicsdbd'],
 )

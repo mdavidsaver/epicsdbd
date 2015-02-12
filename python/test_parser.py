@@ -2,8 +2,8 @@
 
 import unittest
 
-import dbdlexparse as DLP
-from dbdlexparse import DBDToken, DBDLexer
+import epicsdbd as DLP
+from epicsdbd import DBDToken, DBDLexer
 from cStringIO import StringIO
 
 class StoreParser(DLP.DBDParser):

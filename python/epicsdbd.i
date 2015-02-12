@@ -1,4 +1,4 @@
-%module(directors="1") dbdlexparse
+%module(directors="1") epicsdbd
 
 #ifdef SWIGPYTHON
 %include "std_except.i";
