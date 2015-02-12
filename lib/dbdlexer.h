@@ -84,6 +84,8 @@ protected:
 
 private:
     void doToken(tokState_t next);
+    std::string InvalidChar(const DBDLexer& L, DBDLexer::tokState_t state, char c);
+
     void setLine();
     tokState_t tokState;
     unsigned line, col;

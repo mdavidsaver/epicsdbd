@@ -55,11 +55,10 @@ std::string LexError(const DBDLexer& L, const char *msg)
 }
 #define THROW(msg) throw std::runtime_error(LexError(*this, msg))
 
-static
-std::string InvalidChar(const DBDLexer& L, DBDLexer::tokState_t state, char c)
+std::string DBDLexer::InvalidChar(const DBDLexer& L, DBDLexer::tokState_t state, char c)
 {
     std::ostringstream strm;
-    strm<<"Invalid charactor at "<<L.tok.line<<":"<<L.tok.col
+    strm<<"Invalid charactor at "<<L.line<<":"<<L.col
         <<" : '"<<c<<"' ("<<int(c)<<") State "
         <<DBDLexer::tokStateName(state);
     return strm.str();
