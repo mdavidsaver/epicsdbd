@@ -75,16 +75,16 @@ void DBDParser::token(tokState_t tokState, DBDToken &tok)
         /*
         state_dbd : EOI -> reduce(finish) -> state_done
                   | Bareword -> shift -> state_CoB
-                  | '#' -> reduce(comment) -> state_dbd
-                  | '%' -> reduce(code) -> state_dbd
+                  | tokComment -> reduce(comment) -> state_dbd
+                  | tokCode -> reduce(code) -> state_dbd
                   | '}' -> reduce(block) -> state_dbd
                   | . -> error
 
         state_tail : '{' -> reduce(initbody) -> state_dbd
                    | EOI -> reduce(finish) -> state_done
                    | Bareword -> shift -> state_CoB
-                   | '#' -> reduce(comment) -> state_dbd
-                   | '%' -> reduce(code) -> state_dbd
+                   | tokComment -> reduce(comment) -> state_dbd
+                   | tokCode -> reduce(code) -> state_dbd
                    | '}' -> reduce(block) -> state_dbd
                    | . -> error
          */
@@ -103,18 +103,20 @@ void DBDParser::token(tokState_t tokState, DBDToken &tok)
             parState = parCoB;
             break;
 
+        case tokComment:
+            // reduce comment
+            parse_comment(tok);
+            parState = parDBD; break;
+
+        case tokCode:
+            // reduce code
+            parse_code(tok);
+            parState = parDBD;break;
+
         case tokLit:
             assert(tok.size()==1);
             switch(tok.value.at(0))
             {
-            case '#':
-                // reduce comment
-                parse_comment(tok);
-                parState = parDBD; break;
-            case '%':
-                // reduce code
-                parse_code(tok);
-                parState = parDBD;break;
             case '}':
                 // reduce block
                 if(parDepth==0)
