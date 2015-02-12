@@ -1,15 +1,18 @@
 %module(directors="1") dbdlexparse
 
+#ifdef SWIGPYTHON
 %include "std_except.i";
 %include "std_string.i";
 %include "std_vector.i";
 %apply const std::string& {std::string* foo};
-
+#endif
 
 %{
 #include "dbdlexer.h"
 #include "dbdparser.h"
+#ifdef SWIGPYTHON
 #include "pystream.h"
+#endif
 /* sub-class with non-pure virtual methods */
 
 class PyDBDLexer : public DBDLexer {
@@ -57,6 +60,7 @@ typedef DBDParser::blockarg_t blockarg_t;
   }
 %}
 
+#ifdef SWIGPYTHON
 // build a List from vector<string> when passed to overloaded python
 %typemap(directorin) blockarg_t& %{
 {
@@ -70,6 +74,7 @@ typedef DBDParser::blockarg_t blockarg_t;
   }
 }
 %}
+#endif
 
 class DBDToken
 {
@@ -83,6 +88,7 @@ public:
     bool operator==(const DBDToken& o);
     bool operator!=(const DBDToken& o);
 
+#ifdef SWIGPYTHON
     %pythoncode %{
     def copy(self):
         return self.__class__(self)
@@ -90,6 +96,7 @@ public:
         return 'DBDToken("%s", %d, %d)'%(self.value,self.line,self.col)
     __str__=__repr__
     %}
+#endif
 };
 
 %feature("director") PyDBDLexer;
@@ -112,12 +119,14 @@ public:
 
     virtual void token(tokState_t, DBDToken&);
     %extend {
+#ifdef SWIGPYTHON
     void lex(PyObject *o)
     {
         pystreambuf buf(o);
         std::istream strm(&buf);
         $self->lex(strm);
     }
+#endif
     }
 };
 
@@ -149,11 +158,13 @@ public:
     virtual void parse_eoi();
 
     %extend {
+#ifdef SWIGPYTHON
     void lex(PyObject *o)
     {
         pystreambuf buf(o);
         std::istream strm(&buf);
         $self->lex(strm);
     }
+#endif
     }
 };
