@@ -74,7 +74,7 @@ void DBDParser::token(tokState_t tokState, DBDToken &tok)
     case parTail:
         /*
         state_dbd : EOI -> reduce(finish) -> state_done
-                  | Bareword -> shift -> state_CoB
+                  | tokBare -> shift -> state_CoB
                   | tokComment -> reduce(comment) -> state_dbd
                   | tokCode -> reduce(code) -> state_dbd
                   | '}' -> reduce(block) -> state_dbd
@@ -82,7 +82,7 @@ void DBDParser::token(tokState_t tokState, DBDToken &tok)
 
         state_tail : '{' -> reduce(initbody) -> state_dbd
                    | EOI -> reduce(finish) -> state_done
-                   | Bareword -> shift -> state_CoB
+                   | tokBare -> shift -> state_CoB
                    | tokComment -> reduce(comment) -> state_dbd
                    | tokCode -> reduce(code) -> state_dbd
                    | '}' -> reduce(block) -> state_dbd
@@ -147,8 +147,8 @@ void DBDParser::token(tokState_t tokState, DBDToken &tok)
 
     case parCoB:
         /*
-        state_CoB : Bareword -> shift -> reduce(command) -> state_dbd
-                  | Quoted -> shift -> reduce(command) -> state_dbd
+        state_CoB : tokBare -> shift -> reduce(command) -> state_dbd
+                  | tokQuoted -> shift -> reduce(command) -> state_dbd
                   | '(' -> reduce(initblock) -> state_arg
                   | . -> error
          */
@@ -180,8 +180,8 @@ void DBDParser::token(tokState_t tokState, DBDToken &tok)
     case parArg:
         /*
         state_arg : ')' -> reduce(blockargs) -> state_tail
-                  | Bareword -> shift -> state_arg_cont
-                  | Quoted -> shift -> state_arg_cont
+                  | tokBare -> shift -> state_arg_cont
+                  | tokQuoted -> shift -> state_arg_cont
                   | . -> error
          */
         switch(tokState) {

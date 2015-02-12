@@ -16,13 +16,13 @@
           | comment
           | block
 
-    command : value value
+    command : tokBare value
 
     code : tokCode
     comment : tokComment
 
-    block : Bareword block_head
-          | Bareword block_head bock_body
+    block : tokeBare block_head
+          | tokeBare block_head bock_body
 
     block_head : '(' ')'
                | '(' value *(',' value) ')'
